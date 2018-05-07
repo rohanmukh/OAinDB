@@ -131,12 +131,11 @@ int main(){
 			}
 					
 			Bay_val_cmp.at(iter) = Bay_Join_runng_avg_cmp;	
-			//cout << Bay_Join_runng_avg_cmp << " " << Freq_val.at(iter) << endl;
 		}
 		
 		cout << " Sample Size:: " << sample_size << " ";
 
-		int num_runs = NUM_RUNS;long double sigma;
+		int num_runs = NUM_RUNS; long double sigma;
 		sigma = get_SE(Bay_val_cmp,Orig_Join,num_runs);
 		printf("Bayesian Comp SE :: %Le ", sigma);
 		

@@ -19,6 +19,16 @@ int cmp(int a, int b) {
 	return a>b;
 }
 
+
+long double get_SE(vector<long double> Freq_val, vector<long double> Orig_Join, int NUM_RUNS){
+	long double sq_sum2 = 0;
+	for(int n = 0; n<NUM_RUNS; n++){
+			sq_sum2 += pow(Freq_val.at(n) - Orig_Join.at(n),2);
+	}
+	long double sigma2 = sqrt(sq_sum2/NUM_RUNS);
+	return sigma2;
+}
+		
 vector<int> get_ranks(vector<int> input1, vector<int> input2){
 	
 	vector<int> input(input1.size());
