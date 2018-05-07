@@ -46,8 +46,8 @@ int main(){
 	int n_max = NUM_ID, n_min = 60 * n_max/100;
 	
 	int INP_DIM = 100*NUM_ID/100;
-	Generat_Table _Table1( TOTAL_SIZE_1, n_max, n_min, INP_DIM , S_MU );
-	Generat_Table _Table2( TOTAL_SIZE_2, n_max, n_min, INP_DIM, S_MU, &_Table1 );
+	Generat_TableFixedSN _Table1( TOTAL_SIZE_1, n_max, n_min, INP_DIM , S_MU );
+	CorrelatedGenTableFixedSN _Table2( TOTAL_SIZE_2, n_max, n_min, INP_DIM, S_MU, &_Table1 );
 	vector<long double> Orig_Join(NUM_RUNS);
 	for(int iter=0;iter<NUM_RUNS;iter++){
 		Orig_Join.at(iter) = _Table1.Join(_Table2);

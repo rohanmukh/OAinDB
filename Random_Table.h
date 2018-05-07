@@ -13,9 +13,6 @@ class Random_Table : public Generat_Table{
 			this->log_factorial_vals = log_factorial_vals;
 		};
 		
-		Random_Table(int Total_Size, int N_MAX, int N_MIN, Random_Table* ref_table) : Generat_Table(Total_Size, N_MAX, N_MIN, -1, -1, ref_table){
-		};
-		
 		void sample_N(vector<int> Sample1, int n_min, int n_max);
 		double get_Jacobian_value(int curr_N, int new_N);	
 		double get_zipf_sum(double s_in, double N_in);	

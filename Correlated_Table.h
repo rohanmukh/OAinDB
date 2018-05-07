@@ -11,10 +11,10 @@ class Correlated_Table : public Random_Table{
 	vector<int> rank2;
 	public:	
 	
-	Correlated_Table(int Total_Size, int N_MAX, int N_MIN, Random_Table* ref_table) : Random_Table(Total_Size, N_MAX, N_MIN, ref_table) {
+	/*Correlated_Table(int Total_Size, int N_MAX, int N_MIN, Random_Table* ref_table) : Random_Table(Total_Size, N_MAX, N_MIN, ref_table) {
 		rank2.resize(N_MAX);
 		compute_rank2(ref_table->H);
-	};
+	};*/
 		
 	Correlated_Table(int Total_Size, int N_MAX, int N_MIN, vector<double> log_factorial_vals) : Random_Table(Total_Size, N_MAX, N_MIN, log_factorial_vals) {
 		rank2.resize(N_MAX);

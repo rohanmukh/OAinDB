@@ -9,36 +9,7 @@
 
 #include "Generat_Table.h"
 
-Generat_Table::Generat_Table(int Total_Size, int N_MAX, int N_MIN, int _N, double s, Generat_Table* ref_table) : table(Total_Size,N_MAX)
-{
-	if(s==-1)
-		this->s = gen_s();
-	else
-		this->s = s;
 	
-	// Remember, gen_H() and gen_H(.. , ..) will generate a H which is N_MAX long but effectively those id's with H.at(id)>_N wont be counted towards data 
-	if(ref_table == NULL){
-		gen_H(); 
-	}else{
-		vector<int> corr_vec_ranks = gen_corr_vector_Kendall_Tau(ref_table->_N);
-		//vector<int> corr_vec_ranks = gen_corr_vector_Kendall_Tau(N_MAX);
-		//gen_H(ref_table->H, N_MAX , corr_vec_ranks);
-		gen_H(ref_table->H, ref_table->_N , corr_vec_ranks);
-	}
-	
-	if(_N == -1){
-		this->_N = gen_N_eff(N_MIN, N_MAX); // returns a value of _N
-		// cout << "Generated N is :: " << this->_N << endl; fflush(stdout);
-	}
-	else{
-		this->_N = _N;
-		assert(_N >= N_MIN );
-		assert(_N <= N_MAX );
-	}
-	gen_data();	
-}
-		
-		
 double Generat_Table::gen_s(){
 	double temp ;
 	while(temp<=S_MIN || temp >S_MAX)
@@ -53,7 +24,7 @@ void Generat_Table::gen_H(){
 	return;
 }
 		
-void Generat_Table::gen_H(vector<int> ref_H, int ref_N, vector<int> corr_vec_ranks){ // this will return an H on length N_MAX but it will be ineffective for ranks >= _N
+void CorrelatedGenTableFixedSN::gen_H(vector<int> ref_H, int ref_N, vector<int> corr_vec_ranks){ // this will return an H on length N_MAX but it will be ineff for ranks >= _N
 	assert(corr_vec_ranks.size() == ref_N);
 	assert(ref_H.size() == N_MAX);
 	int assert_sum = 0;
@@ -90,7 +61,7 @@ void Generat_Table::gen_H(vector<int> ref_H, int ref_N, vector<int> corr_vec_ran
 	return;
 }
 
-vector<int> Generat_Table::gen_corr_vector_Kendall_Tau(int N_in){
+vector<int> CorrelatedGenTableFixedSN::gen_corr_vector_Kendall_Tau(int N_in){
 	int tot_bs = round((1.00 - KenT) * N_in * (N_in-1)/(double)2);
 	cout << tot_bs << endl;
 	vector<int> rank2(N_in);
@@ -110,7 +81,8 @@ vector<int> Generat_Table::gen_corr_vector_Kendall_Tau(int N_in){
 	assert(rank2.size()==N_in);
 	return rank2;
 }
-		
+
+	
 int Generat_Table::gen_N_eff( int N_MIN, int N_MAX ){
 	
 	int N_eff = (int) gsl_ran_poisson (_rng, LAMBDA);
