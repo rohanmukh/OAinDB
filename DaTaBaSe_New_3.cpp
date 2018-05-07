@@ -60,29 +60,17 @@ int main(){
 			
 		int sample_size = sample_size_arr[ij];
 	
-		vector<long double> Freq_val(NUM_RUNS);
-		vector<long double> Bay_val_cmp(NUM_RUNS);
-		
-	
+		vector<long double> Freq_val(NUM_RUNS), Bay_val_cmp(NUM_RUNS);
+
 		
 		omp_set_num_threads(NUM_THREADS);
 		#pragma omp parallel for
 		for(int iter =0;iter<NUM_RUNS;iter++){	
 			vector<int> Sample_1 = _Table1.get_samples(sample_size,ij);
-		
-			for(int i=0;i<NUM_ID;i++){
-				if(Sample_1.at(i) > 0)
-					assert(_Table1.H.at(i) < _Table1._N);
-			}
-			
-			
 			vector<int> Sample_2 = _Table2.get_samples(sample_size,ij);
-			for(int i=0;i<NUM_ID;i++){
-				if(Sample_2.at(i) > 0)
-					assert(_Table2.H.at(i) < _Table2._N);
-			}
 			long double Freq_Join = get_Freq_Join(Sample_1,Sample_2, sample_size);
 			//************************//
+			
 			int NUM_MAX = NUM_ID;
 			int N_MIN=0; 
 			for(int i=0;i<Sample_1.size();i++){
@@ -124,7 +112,6 @@ int main(){
 					long double frac1 = (sampling_iter_num - 1) / (long double)(sampling_iter_num);
 					long double temp2 = Pred_Table_1_cmp.Bay_Join(Pred_Table_2_cmp ,Sample_1, Sample_2)/(long double)(sampling_iter_num);
 					Bay_Join_runng_avg_cmp = Bay_Join_runng_avg_cmp * frac1  + temp2;
-					//cout << Gibbs_iter << " " << Orig_Join.at(0) << " " << Pred_Table_1_cmp.Bay_Join(Pred_Table_2_cmp ,Sample_1, Sample_2) << endl;
 				}
 				
 				Gibbs_iter++;
