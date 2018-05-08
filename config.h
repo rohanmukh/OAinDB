@@ -1,23 +1,28 @@
 #ifndef CONFIG_H_   /* Include guard */
 #define CONFIG_H_
 
-#define TOTAL_SIZE_1 5000000000
-#define TOTAL_SIZE_2 5000000000
-#define NUM_ID 10
-#define NUM_GIBBS_ITER 100
-#define BURN_IN 100
-#define NUM_RUNS 1
-#define NUM_THREADS 1
-#define MAX_APP_NUM 1000
-#define KenT 0.75
-#define corr_alpha 100.0
-#define corr_beta 35.0
-#define LAMBDA 10
+const int TOTAL_SIZE_1 = 500000000;
+const int TOTAL_SIZE_2 = 500000000;
+const int NUM_ID = 100;
+const int N_MAX = NUM_ID;
+const int N_MIN = 60;
+const int NUM_GIBBS_ITER = 200;
+const int BURN_IN = 100;
+const int NUM_RUNS = 1;
+const int NUM_THREADS = 1;
+const int MAX_APP_NUM = 1000;
+const double KenT = 1.0;
+const double corr_alpha = 1000.0;
+const double corr_beta = 1;
+const int lambda = 10;
+// 10,000 /1 when corr = 1
+// 1/10,000 when corr = 0
+// 100 samples test
 
 
-#define S_MU 1.1
-#define S_THETA 0.01
-#define S_MIN 0.1
-#define S_MAX 3.0
+const double s_mu = 1.1;
+const double s_theta = 0.01;
+const double s_min = 0.1;
+const double s_max = 3.0;
 
 #endif // CONFIG_H_

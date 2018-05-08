@@ -10,7 +10,6 @@
 
 #include "Random_Table.h"
 
-
 		
 void Random_Table::sample_N(vector<int> Sample1, int n_min, int n_max){
 
@@ -136,7 +135,7 @@ void Random_Table::sample_H(vector<int> Sample1, Random_Table Pred_Table_2, vect
 	double* q = (double*)malloc(N_stateful*sizeof(double));
 	double* pq = (double*)malloc(N_stateful*sizeof(double));
 	
-	double old_best1 = get_ln_prob_sample_new(Sample1, this->s, this->H);
+	double old_best1 = get_ln_prob_sample_new(Sample1, this->s, this->H, this->_N);
 	vector<int> inv_count_store(N_stateful);
 	for(int sid=0;sid<N_MAX;sid++){ // how many keys ;; the first big O(N) loop
 		
@@ -412,7 +411,7 @@ void Random_Table::sample_H_new(vector<int> Sample1, Random_Table Pred_Table_2, 
 	double* q = (double*)malloc(N_stateful*sizeof(double));
 	double* pq = (double*)malloc(N_stateful*sizeof(double));
 	
-	double old_best1 = get_ln_prob_sample_new(Sample1, this->s, this->H);
+	double old_best1 = get_ln_prob_sample_new(Sample1, this->s, this->H, this->_N);
 	vector<int> inv_count_store(N_stateful);
 	for(int sid=0;sid<N_MAX;sid++){ // how many keys ;; the first big O(N) loop
 		
@@ -663,6 +662,7 @@ vector<double> Random_Table::gen_sorted_prob_ln(double s){ //  returns a vector 
 	assert(std::isnan(sum) == 0);
 	return prob_temp;
 }
+
 		
 void Random_Table::Rank_Wise_Sample_Smart_Update(vector<int>* Rank_wise_Sample, vector<int>* Sample, vector<int>* rank_map, int sid, int did){ // independent
 //	assert(sid <= _N);
@@ -756,313 +756,9 @@ void Random_Table::Modify_H_smart(vector<int>* H_in, vector<int>* rank_map1, int
 	return;
 }
 
-
 void Random_Table::sample_s(vector<int> Sample){
-	
-	double currentPoint=-1,cpoint=-1;
-	double glob_best = -99999999999999.999999999;
-	
-	assert(lnEVAL(Sample,s_mu)>glob_best);
-	for(int nos = 0; nos<50;nos++){
-		double temp = s_mu + gsl_ran_gaussian (_rng,theta);  // the zero-magnitude vector is common		
-		temp = std::max(temp,S_MIN);
-		temp = std::min(temp,S_MAX);
-		assert(temp>=S_MIN);
-		assert(temp<=S_MAX);
-		assert(std::isnan(temp)==false);
-		
-		if(lnEVAL(Sample,temp)>glob_best){
-			currentPoint = temp;
-			assert(temp>=S_MIN);
-			assert(temp<=S_MAX);
-			assert(std::isnan(temp)==false);
-
-			glob_best = lnEVAL(Sample,temp);
-		}
-	}
-	assert(currentPoint>=S_MIN);
-	assert(currentPoint<=S_MAX);
-	assert(std::isnan(currentPoint)==false);
-
-	cpoint = hill_climb(currentPoint, Sample);
-	//assert(glob_best > 0);
-
-	
-	
-	assert(cpoint>=S_MIN);
-	assert(cpoint<=S_MAX);
-	assert(std::isnan(cpoint)==false);
-
-	double rect_bound = lnEVAL(Sample,cpoint);
-	
-	int iter = 0;
-	double left_cutoff = cpoint - 0.01;
-	
-	assert(left_cutoff>=S_MIN);
-	assert(left_cutoff<=S_MAX);
-	
-	assert(std::isnan(left_cutoff)==false);
-	
-	while(lnEVAL(Sample,left_cutoff) >= (rect_bound - log(1000))){
-		left_cutoff -= 0.01;
-		if(left_cutoff<=S_MIN){
-			left_cutoff = S_MIN - 0.01;
-			break;
-		}
-		iter++;
-		if(iter>300)
-			printf("Danger1!\n");fflush(stdout);
-	}
-	left_cutoff += 0.01;
-	
-	iter = 0;
-	double right_cutoff = cpoint + 0.01;
-	assert(std::isnan(right_cutoff)==false);
-	
-	assert(right_cutoff>=S_MIN);
-	assert(right_cutoff<=S_MAX);
-	
-	while(lnEVAL(Sample,right_cutoff) >= (rect_bound - log(1000))){
-		right_cutoff += 0.01;
-		if(right_cutoff>=S_MAX){
-			right_cutoff = S_MAX + 0.01;
-			break;
-		}
-		iter++;
-		if(iter>300)
-			printf("Danger2!\n");fflush(stdout);
-	}
-	right_cutoff -= 0.01;
-
-	if(left_cutoff >= right_cutoff){
-		this->s = cpoint;
-		assert(cpoint == left_cutoff);
-		assert(cpoint == right_cutoff);
-	}
-	else{
-		double rand_x;
-		double rand_y;
-		iter = 0;
-		while(1){
-			rand_x = left_cutoff + gsl_rng_uniform (_rng) * (right_cutoff - left_cutoff);
-			rand_y = log(gsl_rng_uniform(_rng)) + rect_bound;
-			
-			assert(std::isnan(rand_x)==false);
-			assert(rand_x>=S_MIN);
-			assert(rand_x<=S_MAX);
-	
-			if(rand_y < (lnEVAL(Sample, rand_x))){
-				this->s = rand_x;
-				break;
-			}
-			iter++;
-			if(iter>500){
-				this->s = cpoint;
-				printf("Danger3!\n");
-				cout << " left cutoff :: " << left_cutoff << " right cutoff :: " << right_cutoff << " cpoint :: " << cpoint << "currentPoint :: " << currentPoint << "glob_best " << glob_best << " " << endl;
-				fflush(stdout);
-				break;
-			}
-		}
-	}
-	//printf(" sample is :: %lf\n",rand_x);;
+	this->s = this->S_sampler->sample_s(Sample, this->H, _rng);
 	return;
-}
-
-
-double Random_Table::hill_climb(double currentPoint, vector<int> Sample){
-	double bestScore;
-	double stepSize = 0.01;
-	double candidate[5];
-	double epsilon = 0.0001;
-	double acceleration = 1.2; // a value such as 1.2 is common
-	candidate[0] = -1 * acceleration;
-	candidate[1] = -1 / acceleration;
-	candidate[2] = 0.00;
-	candidate[3] = 1 / acceleration;
-	candidate[4] = acceleration;
-	int count = 0;
-	int iter = 0;
-	while(1){
-		//cout << " " << candidate[0]<< " " << candidate[1]<< " " << candidate[2]<< " " << candidate[3]<< " " << candidate[4] << endl;
-		assert(currentPoint<=S_MAX);
-		assert(currentPoint>=S_MIN);
-		assert(std::isnan(currentPoint)==false);
-
-		double before = lnEVAL(Sample, currentPoint);
-		int best = -1;
-		bestScore = -99999999999999999.9999999;
-		for(int j=0;j<5;j++){         // try each of 5 candidate locations
-			currentPoint = currentPoint + stepSize * candidate[j];
-			double temp;
-			if((currentPoint<=S_MIN)||(currentPoint>=S_MAX)){
-				currentPoint = std::max(currentPoint,S_MIN);
-				currentPoint = std::min(currentPoint,S_MAX);
-				
-				temp = 0;
-			}else{
-				assert(std::isnan(currentPoint)==false);
-
-				temp =  lnEVAL(Sample, currentPoint);
-	
-				/*if(std::isnan(temp) || temp < 0)
-					temp = 0;
-				*/
-				
-				//assert(temp >= 0);
-			}
-			currentPoint = currentPoint - stepSize * candidate[j];
-			if(temp >= bestScore){
-				 bestScore = temp;
-				 best = j;
-				// cout << temp << endl;
-					 
-				 assert(best>=0);
-			}
-		}
-		if (candidate[best] == 0.00){
-			stepSize = stepSize / acceleration;
-		}
-		else{
-			assert(best>=0);
-			currentPoint = currentPoint + stepSize * candidate[best];
-			stepSize = stepSize * candidate[best]; // accelerate
-			
-		}
-		stepSize = std::max(stepSize,0.5);
-		stepSize = std::min(stepSize,0.001);
-		
-		assert(std::isinf(stepSize)==false);
-		assert(std::isnan(stepSize)==false);
-		
-		currentPoint = std::max(currentPoint,S_MIN);
-		currentPoint = std::min(currentPoint,S_MAX);
-		assert(best>=0);
-		
-		
-		assert(std::isnan(currentPoint)==false);
-		assert(currentPoint<=S_MAX);
-		assert(currentPoint>=S_MIN);
-		if (abs(lnEVAL(Sample,currentPoint) - before)/before <= epsilon){
-			count++;
-		}else{
-			count = 0;
-		}
-		if(iter>500){
-			cout << bestScore << endl;fflush(stdout);
-			break;
-		}
-		iter++;
-		if(count == 10)
-			break;
-			
-	}
-	
-	assert(currentPoint>=S_MIN);
-	assert(currentPoint<=S_MAX);
-	
-	return currentPoint;
-}
-
-
-double Random_Table::lnEVAL(vector<int> Sample, double s_in){
-	vector<int> temp_H(N_MAX);
-	for(int i=0;i>N_MAX;i++){
-		temp_H.at(i) = this->H.at(i);
-	}
-	assert(std::isnan(s_in)==false);
-
-	assert(s_in<=S_MAX);
-	assert(s_in>=S_MIN);
-	double temp = get_ln_prob_sample_new(Sample, s_in, temp_H)  + log(gsl_ran_gaussian_pdf (s_in - s_mu, theta));
-	/*if(std::isnan(temp)){
-		temp = std::numeric_limits<double>::lowest();
-	}*/
-	//assert(temp >= 0);
-	return temp;
-}
-	
-double Random_Table::EVAL(vector<int> Sample, double s_in){
-	vector<int> temp_H(N_MAX);
-	for(int i=0;i>N_MAX;i++){
-		temp_H.at(i) = this->H.at(i);
-	}
-	assert(std::isnan(s_in)==false);
-
-	assert(s_in<=S_MAX);
-	assert(s_in>=S_MIN);
-	double temp = get_prob_sample_new(Sample, s_in, temp_H)  * gsl_ran_gaussian_pdf (s_in - s_mu, theta);
-	/*if(std::isnan(temp)){
-		temp = std::numeric_limits<double>::lowest();
-	}*/
-	assert(temp >= 0);
-	return temp;
-}
-		
-double Random_Table::get_prob_sample_new(vector<int> Sample1, double s_in, vector<int> H){
-	//vector<double> data_temp = gen_sorted_data(s_in);
-	
-	int flag = 0;
-	double sum = 0;
-	
-	assert(s_in<=S_MAX);
-	assert(s_in>=S_MIN);
-	double* prob_multinomial_1 = (double*)malloc(N_MAX*sizeof(double));
-	
-	double gp_sum1 = 0;
-	for(int i=0;i< this->_N;i++){
-		gp_sum1 += get_zipf(i+1,s_in) ; //1/(double)(pow(i+1,s_in)); // + Noise
-	}
-	assert(std::isinf(gp_sum1) == false);
-	
-	unsigned int* sample_count = (unsigned int*)malloc(N_MAX*sizeof(unsigned int));
-	for(int i=0;i<N_MAX;i++){
-		if(H.at(i) < this->_N){
-			//prob_multinomial_1[i] = 1/(double)(pow(H.at(i)+1,s_in)*gp_sum1);
-			prob_multinomial_1[i] = get_zipf(H.at(i),s_in);
-			prob_multinomial_1[i] /= gp_sum1;
-			assert(prob_multinomial_1[i] > 0.00);
-			sample_count[i] = (unsigned int) Sample1.at(i);
-
-		}
-		else{
-			prob_multinomial_1[i] = 0.0;
-			sample_count[i] = 0; // lets force this
-
-		}
-		
-		/*if(H.at(i) >= this->_N && sample_count[i] >= 1)
-			flag = 1;*/
-	}
-	
-	//double result = gsl_ran_multinomial_pdf (N_MAX, prob_multinomial_1, sample_count);
-	vector<double> prob_new;
-	vector<unsigned int> sample_new;	
-	if(flag==0){
-		for(int i=0;i<N_MAX;i++){
-			if(H.at(i) < this->_N){
-				assert(prob_multinomial_1[i] > 0.0);
-				prob_new.push_back(prob_multinomial_1[i]);
-				sample_new.push_back(sample_count[i]);
-			}
-		}
-		assert(sample_new.size() == prob_new.size());
-	}
-	double result;
-	if(flag == 0)
-		result = gsl_ran_multinomial_pdf (sample_new.size(), prob_new.data(), sample_new.data());
-	else 
-		result = 0;
-	
-	/*if(std::isnan(result)){
-		result = std::numeric_limits<double>::lowest();
-	}*/
-	
-	assert(std::isnan(result)==0);
-	assert(result>=0);
-	free(sample_count);
-	free(prob_multinomial_1);
-	return result;
 }
 
 double Random_Table::get_ln_prob_sample_N_variable_N(vector<int> Sample1, vector<int> H, int _N_in){
@@ -1106,37 +802,6 @@ double Random_Table::get_ln_prob_sample_N_variable_N(vector<int> Sample1, vector
 }
 
 
-double Random_Table::get_ln_prob_sample_new(vector<int> Sample1, double s, vector<int> H){
-	//vector<double> data_temp = gen_sorted_data(s);
-	
-	int flag = 0;
-	double sum = 0;
-	
-	double* prob_multinomial_1 = (double*)malloc(N_MAX*sizeof(double));
-	
-	double gp_sum1 = 0;
-	for(int i=0;i<this->_N;i++){
-		gp_sum1 += get_zipf(i+1,s);//1/(double)(pow(i+1,s)); // + Noise
-	}
-	double ln_fact_sum=0;
-	unsigned int* sample_count = (unsigned int*)malloc(N_MAX*sizeof(unsigned int));
-	for(int i=0;i<N_MAX;i++){
-		if(H.at(i) < _N){
-			prob_multinomial_1[i] = get_zipf(H.at(i)+1,s)/gp_sum1;//1/(double)(pow(H.at(i)+1,s)*gp_sum1);
-			sample_count[i] = (unsigned int) Sample1.at(i);
-			ln_fact_sum += sample_count[i] * get_zipf_log(H.at(i)+1,s);//(-1)*s*log(H.at(i)+1);
-		}
-		else{
-			prob_multinomial_1[i] = 0;
-			sample_count[i] = 0;
-		}
-	}
-
-	assert(std::isnan(ln_fact_sum)==false);
-	free(sample_count);
-	free(prob_multinomial_1);
-	return ln_fact_sum;
-}
 
 
 int Random_Table::get_inv_count(vector<int> rank2, int N_stateful){ // it only takes into account _N elements

@@ -12,6 +12,7 @@ long double get_Freq_Join(vector<int> Sample_1  , vector<int> Sample_2, int samp
 double virtual_log_sum(double x, double y);
 double get_zipf(int in,double s);
 double get_zipf_log(int in,double s);
-
+double get_ln_prob_sample_new(vector<int> Sample1, double s, vector<int> H, int _N);
+double get_prob_sample_new(vector<int> Sample1, double s_in, vector<int> H, int _N);
 
 #endif // UTILS_H_

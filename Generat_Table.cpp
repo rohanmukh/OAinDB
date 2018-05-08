@@ -12,8 +12,8 @@
 	
 double Generat_Table::gen_s(){
 	double temp ;
-	while(temp<=S_MIN || temp >S_MAX)
-		temp = S_MU + gsl_ran_gaussian (_rng, S_THETA);
+	while(temp<=s_min || temp >s_max)
+		temp = s_mu + gsl_ran_gaussian (_rng, s_theta);
 	return temp;
 }
 		
@@ -85,7 +85,7 @@ vector<int> CorrelatedGenTableFixedSN::gen_corr_vector_Kendall_Tau(int N_in){
 	
 int Generat_Table::gen_N_eff( int N_MIN, int N_MAX ){
 	
-	int N_eff = (int) gsl_ran_poisson (_rng, LAMBDA);
+	int N_eff = (int) gsl_ran_poisson (_rng, lambda);
 	N_eff = min(N_eff,N_MAX);
 	N_eff = max(N_eff,N_MIN);
 	return N_eff; 

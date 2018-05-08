@@ -9,10 +9,7 @@ class Generat_Table : public table{
 	public:
 		double s; // The Zipfian Parameter
 		int _N;   // _N is also called N_eff
-		// Hyperparameters for s
-		double theta = S_THETA;double s_mu = S_MU;
-		// For N_eff/_N
-		double lambda = LAMBDA;
+
 		
 	public:
 		Generat_Table(int Total_Size, int N_MAX, int N_MIN) : table(Total_Size,N_MAX){

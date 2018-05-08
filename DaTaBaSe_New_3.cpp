@@ -15,16 +15,12 @@
 #include <chrono>
 
 using namespace std;
-#include "config.h"
 #include "utils.h"
 #include "table.h"
 #include "Generat_Table.h"
 #include "Random_Table.h"
 #include "Correlated_Table.h"
 
-// 10,000 /1 when corr = 1
-// 1/10,000 when corr = 0
-// 100 samples test
 
 vector<double> log_factorial_vals;
 
@@ -43,17 +39,17 @@ int main(){
 	
 	
 	
-	int n_max = NUM_ID, n_min = 60 * n_max/100;
+	int n_max = N_MAX, n_min = N_MIN;
 	
-	int INP_DIM = 100*NUM_ID/100;
-	Generat_TableFixedSN _Table1( TOTAL_SIZE_1, n_max, n_min, INP_DIM , S_MU );
-	CorrelatedGenTableFixedSN _Table2( TOTAL_SIZE_2, n_max, n_min, INP_DIM, S_MU, &_Table1 );
+	int INP_DIM = NUM_ID;
+	Generat_TableFixedSN _Table1( TOTAL_SIZE_1, n_max, n_min, INP_DIM , s_mu );
+	CorrelatedGenTableFixedSN _Table2( TOTAL_SIZE_2, n_max, n_min, INP_DIM, s_mu, &_Table1 );
 	vector<long double> Orig_Join(NUM_RUNS);
 	for(int iter=0;iter<NUM_RUNS;iter++){
 		Orig_Join.at(iter) = _Table1.Join(_Table2);
 	}
 	
-	printf("No of keys : %d,  Correlation :: %lf, S_MU :: %lf , Prior for correlation %lf / %lf ", INP_DIM, KenT, S_MU, corr_alpha,corr_beta );	
+	printf("No of keys : %d,  Correlation :: %lf, s_mu :: %lf , Prior for correlation %lf / %lf ", INP_DIM, KenT, s_mu, corr_alpha,corr_beta );	
 	printf("Original Join :: %Le \n\n\n",  Orig_Join.at(0));
 			
 	for(int ij=0;ij<No_of_sample_sizes;ij++){
@@ -97,14 +93,14 @@ int main(){
 				Pred_Table_1_cmp.sample_s(Sample_1);
 				Pred_Table_2_cmp.sample_s(Sample_2);
 							
-				Pred_Table_1_cmp._N = std::max(_Table1._N , N_MIN);
-				Pred_Table_2_cmp._N = std::max(_Table2._N , N_MIN);
+				Pred_Table_1_cmp._N = INP_DIM ;//std::max(_Table1._N , N_MIN);
+				Pred_Table_2_cmp._N = INP_DIM ;//std::max(_Table2._N , N_MIN);
 								
 				Pred_Table_1_cmp.sample_H(Sample_1,Pred_Table_2_cmp, Sample_2);
 				Pred_Table_2_cmp.sample_corr(Sample_2, Pred_Table_1_cmp, Sample_1);
 				
-				int curr_N = Pred_Table_2_cmp._N;
-				double corr = Pred_Table_2_cmp.get_inv_count(Pred_Table_2_cmp.rank2, curr_N )/(double)((curr_N)*(curr_N-1)/2);
+				//int curr_N = Pred_Table_2_cmp._N;
+				//double corr = Pred_Table_2_cmp.get_inv_count(Pred_Table_2_cmp.rank2, curr_N )/(double)((curr_N)*(curr_N-1)/2);
 				//cout << 1-corr << endl;
 			
 				if(Gibbs_iter > BURN_IN && Gibbs_iter %10 >= 0){
@@ -118,6 +114,7 @@ int main(){
 			}
 					
 			Bay_val_cmp.at(iter) = Bay_Join_runng_avg_cmp;	
+			//cout << Bay_val_cmp.at(iter) << endl;
 		}
 		
 		cout << " Sample Size:: " << sample_size << " ";
