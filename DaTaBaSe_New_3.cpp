@@ -96,8 +96,8 @@ int main(){
 				Pred_Table_1_cmp._N = INP_DIM ;//std::max(_Table1._N , N_MIN);
 				Pred_Table_2_cmp._N = INP_DIM ;//std::max(_Table2._N , N_MIN);
 								
-				Pred_Table_1_cmp.sample_H(Sample_1,Pred_Table_2_cmp, Sample_2);
-				Pred_Table_2_cmp.sample_corr(Sample_2, Pred_Table_1_cmp, Sample_1);
+				Pred_Table_1_cmp.sample_H(Sample_1,Pred_Table_2_cmp.H, Sample_2);
+				Pred_Table_2_cmp.sample_corr(Sample_2, Pred_Table_1_cmp.H, Sample_1);
 				
 				//int curr_N = Pred_Table_2_cmp._N;
 				//double corr = Pred_Table_2_cmp.get_inv_count(Pred_Table_2_cmp.rank2, curr_N )/(double)((curr_N)*(curr_N-1)/2);

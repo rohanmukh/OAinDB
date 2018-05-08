@@ -23,8 +23,8 @@ class Correlated_Table : public Random_Table{
 		}
 	};
 	
-	void sample_corr(vector<int> Sample2, Random_Table Pred_Table_1, vector<int> Sample1);
-	void sample_corr_new(vector<int> Sample2, Random_Table Pred_Table_1, vector<int> Sample1);
+	void sample_corr(vector<int> Sample2, vector<int> Pred_Table_1_H, vector<int> Sample1);
+	void sample_corr_new(vector<int> Sample2, vector<int> Pred_Table_1_H, vector<int> Sample1);
 	void compute_rank2(vector<int> ref_H);
 };
 

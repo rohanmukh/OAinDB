@@ -12,16 +12,16 @@
 #include "Correlated_Table.h"
 	
 	
-void Correlated_Table::sample_corr(vector<int> Sample2, Random_Table Pred_Table_1, vector<int> Sample1){
+void Correlated_Table::sample_corr(vector<int> Sample2, vector<int>  Pred_Table_1_H, vector<int> Sample1){
 	
-	sample_H(Sample2,Pred_Table_1, Sample1);
-	compute_rank2(Pred_Table_1.H);
+	sample_H(Sample2,Pred_Table_1_H, Sample1);
+	compute_rank2(Pred_Table_1_H);
 	return;
 }
-void Correlated_Table::sample_corr_new(vector<int> Sample2, Random_Table Pred_Table_1, vector<int> Sample1){
+void Correlated_Table::sample_corr_new(vector<int> Sample2, vector<int>  Pred_Table_1_H, vector<int> Sample1){
 	
-	sample_H_new(Sample2,Pred_Table_1, Sample1);
-	compute_rank2(Pred_Table_1.H);
+	sample_H(Sample2,Pred_Table_1_H, Sample1);
+	compute_rank2(Pred_Table_1_H);
 	return;
 }
 
