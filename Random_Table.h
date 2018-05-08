@@ -4,22 +4,24 @@
 #include "Generat_Table.h"
 #include "utils.h" 
 #include "Bay_Zipf_Exp.h"
+#include "Bay_RJMC_N.h"
 #include "MergeSort.h"
 
 class Random_Table : public Generat_Table{
 	public:
 		vector<double> log_factorial_vals;
 		Bay_Zipf_Exp* S_sampler;
+		Bay_RJMC_N* N_sampler;
 
 	public:	
 		Random_Table(int Total_Size, int N_MAX, int N_MIN, vector<double> log_factorial_vals) :  Generat_Table(Total_Size, N_MAX, N_MIN){
 			this->log_factorial_vals = log_factorial_vals;
-			this->S_sampler = new Bay_Zipf_Exp(N_MAX, this->_N);
+			this->S_sampler = new Bay_Zipf_Exp();
+			this->N_sampler = new Bay_RJMC_N();
 		};
 		
-		void sample_N(vector<int> Sample1, int n_min, int n_max);
-		double get_Jacobian_value(int curr_N, int new_N);	
-		double get_zipf_sum(double s_in, double N_in);	
+		void sample_N(vector<int> Sample1);
+		void sample_s(vector<int> Sample);
 		
 		void sample_H(vector<int> Sample1, Random_Table Pred_Table_2, vector<int> Sample2);
 		void sample_H_new(vector<int> Sample1, Random_Table Pred_Table_2, vector<int> Sample2);
@@ -31,9 +33,8 @@ class Random_Table : public Generat_Table{
 		void Modify_H_smart(vector<int>* H_in, vector<int>* rank_map1, int sid, int did);
 		
 		
-		void sample_s(vector<int> Sample);
 		
-		double get_ln_prob_sample_N_variable_N(vector<int> Sample1, vector<int> H, int _N_in);
+		
 
 		
 		int get_inv_count(vector<int> rank2, int N_stateful);

@@ -121,8 +121,8 @@ double virtual_log_sum(double x, double y){
 }
 
 double get_zipf(int in,double s){
-	int _N_MAX = NUM_ID/5;
-	double out = 1/(double)(pow(std::min(in,in),s));
+	assert(in>=0);
+	double out = 1/(double)(pow(in,s));
 	return out;
 }
 
@@ -132,6 +132,13 @@ double get_zipf_log(int in,double s){
 	return out;
 }
 
+double get_zipf_sum(double s_in, double N_in){ // independent
+	double gp_sum = 0;
+	for(int i = 0; i<N_in;i++){ 
+		gp_sum += get_zipf(i+1,s_in) ; //1/(double)(pow(i+1,s_in)); // + Noise
+	}
+	return gp_sum;
+}
 
 double get_prob_sample_new(vector<int> Sample1, double s_in, vector<int> H, int _N){
 	//vector<double> data_temp = gen_sorted_data(s_in);

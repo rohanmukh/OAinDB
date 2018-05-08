@@ -12,12 +12,12 @@
 #include "utils.h"
 #include "config.h"
 
-double Bay_Zipf_Exp::sample_s(vector<int> Sample, vector<int> H_in, gsl_rng* _rng){
+double Bay_Zipf_Exp::sample_s(vector<int> Sample, vector<int> H_in, int _N, gsl_rng* _rng){
 	double s_out;
 	double currentPoint=-1,cpoint=-1;
 	double glob_best = -99999999999999.999999999;
 	
-	assert(lnEVAL(Sample,s_mu,H_in)>glob_best);
+	assert(lnEVAL(Sample,s_mu,H_in,_N)>glob_best);
 	for(int nos = 0; nos<50;nos++){
 		double temp = s_mu + gsl_ran_gaussian (_rng,s_theta);  // the zero-magnitude vector is common		
 		temp = std::max(temp,s_min);
@@ -26,20 +26,20 @@ double Bay_Zipf_Exp::sample_s(vector<int> Sample, vector<int> H_in, gsl_rng* _rn
 		assert(temp<=s_max);
 		assert(std::isnan(temp)==false);
 		
-		if(lnEVAL(Sample,temp,H_in)>glob_best){
+		if(lnEVAL(Sample,temp,H_in, _N)>glob_best){
 			currentPoint = temp;
 			assert(temp>=s_min);
 			assert(temp<=s_max);
 			assert(std::isnan(temp)==false);
 
-			glob_best = lnEVAL(Sample,temp,H_in);
+			glob_best = lnEVAL(Sample,temp,H_in, _N);
 		}
 	}
 	assert(currentPoint>=s_min);
 	assert(currentPoint<=s_max);
 	assert(std::isnan(currentPoint)==false);
 
-	cpoint = hill_climb(currentPoint, Sample, H_in);
+	cpoint = hill_climb(currentPoint, Sample, H_in, _N);
 	//assert(glob_best > 0);
 
 	
@@ -47,7 +47,7 @@ double Bay_Zipf_Exp::sample_s(vector<int> Sample, vector<int> H_in, gsl_rng* _rn
 	assert(cpoint<=s_max);
 	assert(std::isnan(cpoint)==false);
 
-	double rect_bound = lnEVAL(Sample,cpoint,H_in);
+	double rect_bound = lnEVAL(Sample,cpoint,H_in,_N);
 	
 	int iter = 0;
 	double left_cutoff = cpoint - 0.01;
@@ -57,7 +57,7 @@ double Bay_Zipf_Exp::sample_s(vector<int> Sample, vector<int> H_in, gsl_rng* _rn
 	
 	assert(std::isnan(left_cutoff) == false);
 	
-	while(lnEVAL(Sample,left_cutoff,H_in) >= (rect_bound - log(1000))){
+	while(lnEVAL(Sample,left_cutoff,H_in,_N) >= (rect_bound - log(1000))){
 		left_cutoff -= 0.01;
 		if(left_cutoff<=s_min){
 			left_cutoff = s_min - 0.01;
@@ -76,7 +76,7 @@ double Bay_Zipf_Exp::sample_s(vector<int> Sample, vector<int> H_in, gsl_rng* _rn
 	assert(right_cutoff>=s_min);
 	assert(right_cutoff<=s_max);
 	
-	while(lnEVAL(Sample,right_cutoff,H_in) >= (rect_bound - log(1000))){
+	while(lnEVAL(Sample,right_cutoff,H_in,_N) >= (rect_bound - log(1000))){
 		right_cutoff += 0.01;
 		if(right_cutoff>=s_max){
 			right_cutoff = s_max + 0.01;
@@ -105,7 +105,7 @@ double Bay_Zipf_Exp::sample_s(vector<int> Sample, vector<int> H_in, gsl_rng* _rn
 			assert(rand_x>=s_min);
 			assert(rand_x<=s_max);
 	
-			if(rand_y < (lnEVAL(Sample, rand_x, H_in))){
+			if(rand_y < (lnEVAL(Sample, rand_x, H_in,_N))){
 				s_out = rand_x;
 				break;
 			}
@@ -123,7 +123,7 @@ double Bay_Zipf_Exp::sample_s(vector<int> Sample, vector<int> H_in, gsl_rng* _rn
 	return s_out;
 }
 
-double Bay_Zipf_Exp::hill_climb(double currentPoint, vector<int> Sample, vector<int> H_in){
+double Bay_Zipf_Exp::hill_climb(double currentPoint, vector<int> Sample, vector<int> H_in, int _N){
 	double bestScore;
 	double stepSize = 0.01;
 	double candidate[5];
@@ -142,7 +142,7 @@ double Bay_Zipf_Exp::hill_climb(double currentPoint, vector<int> Sample, vector<
 		assert(currentPoint>=s_min);
 		assert(std::isnan(currentPoint)==false);
 
-		double before = lnEVAL(Sample, currentPoint, H_in);
+		double before = lnEVAL(Sample, currentPoint, H_in, _N);
 		int best = -1;
 		bestScore = -99999999999999999.9999999;
 		for(int j=0;j<5;j++){         // try each of 5 candidate locations
@@ -156,7 +156,7 @@ double Bay_Zipf_Exp::hill_climb(double currentPoint, vector<int> Sample, vector<
 			}else{
 				assert(std::isnan(currentPoint)==false);
 
-				temp =  lnEVAL(Sample, currentPoint, H_in);
+				temp =  lnEVAL(Sample, currentPoint, H_in, _N);
 	
 				/*if(std::isnan(temp) || temp < 0)
 					temp = 0;
@@ -195,7 +195,7 @@ double Bay_Zipf_Exp::hill_climb(double currentPoint, vector<int> Sample, vector<
 		assert(std::isnan(currentPoint)==false);
 		assert(currentPoint<=s_max);
 		assert(currentPoint>=s_min);
-		if (abs(lnEVAL(Sample,currentPoint,H_in) - before)/before <= epsilon){
+		if (abs(lnEVAL(Sample,currentPoint,H_in,_N) - before)/before <= epsilon){
 			count++;
 		}else{
 			count = 0;
@@ -217,37 +217,30 @@ double Bay_Zipf_Exp::hill_climb(double currentPoint, vector<int> Sample, vector<
 }
 
 
-double Bay_Zipf_Exp::lnEVAL(vector<int> Sample, double s_in, vector<int> H){
+double Bay_Zipf_Exp::lnEVAL(vector<int> Sample, double s_in, vector<int> H, int _N){
 	vector<int> temp_H(N_MAX);
 	for(int i=0;i>N_MAX;i++){
 		temp_H.at(i) = H.at(i);
 	}
 	assert(std::isnan(s_in)==false);
-
 	assert(s_in<=s_max);
 	assert(s_in>=s_min);
-	double temp = get_ln_prob_sample_new(Sample, s_in, temp_H, this->_N)  + log(gsl_ran_gaussian_pdf (s_in - s_mu, s_theta));
-	/*if(std::isnan(temp)){
-		temp = std::numeric_limits<double>::lowest();
-	}*/
-	//assert(temp >= 0);
+	double temp = get_ln_prob_sample_new(Sample, s_in, temp_H, _N)  + log(gsl_ran_gaussian_pdf (s_in - s_mu, s_theta));
+
 	return temp;
 }
 	
-double Bay_Zipf_Exp::EVAL(vector<int> Sample, double s_in, vector<int> H){
+double Bay_Zipf_Exp::EVAL(vector<int> Sample, double s_in, vector<int> H, int _N){
 	vector<int> temp_H(N_MAX);
 	for(int i=0;i>N_MAX;i++){
 		temp_H.at(i) = H.at(i);
 	}
 	assert(std::isnan(s_in)==false);
-
 	assert(s_in<=s_max);
 	assert(s_in>=s_min);
-	double temp = get_prob_sample_new(Sample, s_in, temp_H, this->_N)  * gsl_ran_gaussian_pdf (s_in - s_mu, s_theta);
-	/*if(std::isnan(temp)){
-		temp = std::numeric_limits<double>::lowest();
-	}*/
-	assert(temp >= 0);
+	
+	double temp = get_prob_sample_new(Sample, s_in, temp_H, _N)  * gsl_ran_gaussian_pdf (s_in - s_mu, s_theta);
+
 	return temp;
 }
 		
