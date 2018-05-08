@@ -4,7 +4,7 @@
 #include "Generat_Table.h"
 #include "utils.h" 
 #include "Bay_Zipf_Exp.h"
-
+#include "MergeSort.h"
 
 class Random_Table : public Generat_Table{
 	public:
@@ -20,6 +20,7 @@ class Random_Table : public Generat_Table{
 		void sample_N(vector<int> Sample1, int n_min, int n_max);
 		double get_Jacobian_value(int curr_N, int new_N);	
 		double get_zipf_sum(double s_in, double N_in);	
+		
 		void sample_H(vector<int> Sample1, Random_Table Pred_Table_2, vector<int> Sample2);
 		void sample_H_new(vector<int> Sample1, Random_Table Pred_Table_2, vector<int> Sample2);
 		vector<int> Modify_H(vector<int> H_in,int sid, int did);
@@ -28,6 +29,8 @@ class Random_Table : public Generat_Table{
 		int gsl_ran_categorical_smart(double* prob_vec,int sid, int did);
 		int gsl_ran_categorical_(double* prob_vec, int len);
 		void Modify_H_smart(vector<int>* H_in, vector<int>* rank_map1, int sid, int did);
+		
+		
 		void sample_s(vector<int> Sample);
 		
 		double get_ln_prob_sample_N_variable_N(vector<int> Sample1, vector<int> H, int _N_in);
@@ -41,10 +44,8 @@ class Random_Table : public Generat_Table{
 		double gsl_ran_beta_log_pdf(double inp, double  alpha, double beta) ;
 		double logfactorial(int n) ;
 		
+
 		
-		int mergeSort(int arr[], int array_size);
-		int _mergeSort(int arr[], int temp[], int left, int right);
-		int merge(int arr[], int temp[], int left, int mid, int right);
 		long double Bay_Join(Random_Table othr_tbl, vector<int> Sample1, vector<int> Sample2);
 };
 

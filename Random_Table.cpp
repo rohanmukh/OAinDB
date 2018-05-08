@@ -684,6 +684,7 @@ void Random_Table::Rank_Wise_Sample_Smart_Update(vector<int>* Rank_wise_Sample, 
 	}
 	return;
 }
+
 		
 int Random_Table::gsl_ran_categorical_smart(double* prob_vec,int sid, int did){ // independent
 	int len = did - sid + 1;
@@ -756,10 +757,14 @@ void Random_Table::Modify_H_smart(vector<int>* H_in, vector<int>* rank_map1, int
 	return;
 }
 
+
+
 void Random_Table::sample_s(vector<int> Sample){
 	this->s = this->S_sampler->sample_s(Sample, this->H, _rng);
 	return;
 }
+
+
 
 double Random_Table::get_ln_prob_sample_N_variable_N(vector<int> Sample1, vector<int> H, int _N_in){
 	//vector<double> data_temp = gen_sorted_data(s);
@@ -800,7 +805,6 @@ double Random_Table::get_ln_prob_sample_N_variable_N(vector<int> Sample1, vector
 	free(prob_multinomial_1);
 	return ans;
 }
-
 
 
 
@@ -898,72 +902,6 @@ double Random_Table::logfactorial(int n) {
 	return prod;
 }
 
-int Random_Table::mergeSort(int arr[], int array_size){
-	int *temp = (int *)malloc(sizeof(int)*array_size);
-	int ans = _mergeSort(arr, temp, 0, array_size - 1);
-	free(temp);
-	return ans;
-}
-
-
-int Random_Table::_mergeSort(int arr[], int temp[], int left, int right){		/* An auxiliary recursive function that sorts the input array and returns the number of inversion in the array. */
-  int mid, inv_count = 0;
-  if (right > left){
-	/* Divide the array into two parts and call _mergeSortAndCountInv()
-	   for each of the parts */
-	mid = (right + left)/2;
- 
-	/* Inversion count will be sum of inversions in left-part, right-part
-	  and number of inversions in merging */
-	inv_count  = _mergeSort(arr, temp, left, mid);
-	inv_count += _mergeSort(arr, temp, mid+1, right);
- 
-	/*Merge the two parts*/
-	inv_count += merge(arr, temp, left, mid+1, right);
-  }
-  return inv_count;
-}
- 
-
-int Random_Table::merge(int arr[], int temp[], int left, int mid, int right){    /* This funt merges two sorted arrays and returns inversion count in
-   the arrays.*/
-  int i, j, k;
-  int inv_count = 0;
- 
-  i = left; /* i is index for left subarray*/
-  j = mid;  /* j is index for right subarray*/
-  k = left; /* k is index for resultant merged subarray*/
-  while ((i <= mid - 1) && (j <= right))
-  {
-	if (arr[i] <= arr[j])
-	{
-	  temp[k++] = arr[i++];
-	}
-	else
-	{
-	  temp[k++] = arr[j++];
- 
-	 /*this is tricky -- see above explanation/diagram for merge()*/
-	  inv_count = inv_count + (mid - i);
-	}
-  }
- 
-  /* Copy the remaining elements of left subarray
-   (if there are any) to temp*/
-  while (i <= mid - 1)
-	temp[k++] = arr[i++];
- 
-  /* Copy the remaining elements of right subarray
-   (if there are any) to temp*/
-  while (j <= right)
-	temp[k++] = arr[j++];
- 
-  /*Copy back the merged elements to original array*/
-  for (i=left; i <= right; i++)
-	arr[i] = temp[i];
- 
-  return inv_count;
-}
 
 long double Random_Table::Bay_Join(Random_Table othr_tbl, vector<int> Sample1, vector<int> Sample2){
 	
