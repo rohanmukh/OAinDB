@@ -15,7 +15,7 @@
 double Bay_Zipf_Exp::sample_s(vector<int> Sample, vector<int> H_in, int _N, gsl_rng* _rng){
 	double s_out;
 	double currentPoint=-1,cpoint=-1;
-	double glob_best = -99999999999999.999999999;
+	double glob_best = -9999.99999;
 	
 	assert(lnEVAL(Sample,s_mu,H_in,_N)>glob_best);
 	for(int nos = 0; nos<50;nos++){
@@ -119,7 +119,7 @@ double Bay_Zipf_Exp::sample_s(vector<int> Sample, vector<int> H_in, int _N, gsl_
 			}
 		}
 	}
-	//printf(" sample is :: %lf\n",rand_x);;
+	//printf(" sample is :: %lf\n",s_out);;
 	return s_out;
 }
 
@@ -144,7 +144,7 @@ double Bay_Zipf_Exp::hill_climb(double currentPoint, vector<int> Sample, vector<
 
 		double before = lnEVAL(Sample, currentPoint, H_in, _N);
 		int best = -1;
-		bestScore = -99999999999999999.9999999;
+		bestScore = -9999.999;
 		for(int j=0;j<5;j++){         // try each of 5 candidate locations
 			currentPoint = currentPoint + stepSize * candidate[j];
 			double temp;

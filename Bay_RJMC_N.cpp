@@ -82,7 +82,7 @@ double Bay_RJMC_N::get_ln_prob_sample_N_variable_N(vector<int> Sample1, int _N_i
 	
 	double ans;
 	if(flag == 1)
-		ans = -9999999.99999;
+		ans = -9999.99999;
 	else
 		ans = gsl_ran_multinomial_lnpdf (N_MAX, prob_multinomial, sample_count);
 		

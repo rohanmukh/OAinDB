@@ -88,8 +88,8 @@ long double get_Freq_Join(vector<int> Sample_1  , vector<int> Sample_2, int samp
 	scale_up *= TOTAL_SIZE_2/(long double)sample_size;
 	long double Freq_Join = 0;//((double) inner_product(Sample_1.begin(),Sample_1.end(), Sample_2.begin(), 0)) * scale_up ;
 	for(int i=0;i<NUM_ID;i++){
-		assert(Sample_1.at(i)>0);
-		assert(Sample_2.at(i)>0);
+		assert(Sample_1.at(i)>=0);
+		assert(Sample_2.at(i)>=0);
 		long double temp1 = (long double) Sample_1.at(i);
 		long double temp2 = (long double) Sample_2.at(i);
 		long double Freq_Join_old = Freq_Join;

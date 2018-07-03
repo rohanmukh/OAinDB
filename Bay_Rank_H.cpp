@@ -14,37 +14,13 @@
 
 void Bay_Rank_H::sample_H(vector<int> Sample1, vector<int> Pred_Table_2_H, vector<int> Sample2, int _N, double s, vector<int> H, gsl_rng* _rng){
 	
-	int _N_xcs_flag = 0;
-	int count = 0;
-	for(int i=0;i<N_MAX;i++){
-		if(Sample1.at(i)>0){
-			//assert(H.at(i)<_N); it will be N_stateful now
-			count++;
-		}
-	}
-	
-	assert(_N >= count); //sample_N should precede sample_H
-	
-	/*if(_N < count){ // Just dont point out error, you can correct them as well
-		_N = count;
-	}*/
-		
-	int MAX_APP = MAX_APP_NUM; // Max approximation. A value of N means no approximation
-	
+
 	vector<int> rank_map1(N_MAX,0); // it is the inverse mapper of H vector
 	vector<double> log_prob_temp1 = gen_sorted_prob_ln(s, _N);
-	
 	vector<int> Rank_wise_Sample1(N_MAX,0);
 	vector<int> corr_rank_mapper1(N_MAX);
 	vector<int> corr_rank_mapper2(N_MAX);
 	vector<int> corr_rank_mapper3(N_MAX);
-	
-
-
-		
-	int N_stateful = N_MAX;
-	//_N = N_stateful; // A huge change it is
-	//Pred_Table_2._N = N_stateful;
 	
 	for(int i=0;i<N_MAX;i++){
 		// Rank wise Sample runs till N_MAX but I think we dont need to access ones over _N, lets see
@@ -56,23 +32,21 @@ void Bay_Rank_H::sample_H(vector<int> Sample1, vector<int> Pred_Table_2_H, vecto
 	
 	
 	for(int i=0;i<N_MAX;i++){
+		if(i >= N_MAX){
+			assert(corr_rank_mapper1.at(i) == i);
+		}
 		corr_rank_mapper2.at(i) = corr_rank_mapper1.at(i);
 		corr_rank_mapper3.at(i) = corr_rank_mapper1.at(i);
 	}
 	
-	for(int i = N_stateful;i<N_MAX;i++){
-		assert(corr_rank_mapper1.at(i) == i);
-		assert(corr_rank_mapper2.at(i) == i);
-	}
+	int old_inv_count = get_inv_count(corr_rank_mapper1, N_MAX ); // Nlog(N)
 	
-	int old_inv_count = get_inv_count(corr_rank_mapper1, N_stateful ); // Nlog(N)
-	
-	double* p = (double*)malloc(N_stateful*sizeof(double));
-	double* q = (double*)malloc(N_stateful*sizeof(double));
-	double* pq = (double*)malloc(N_stateful*sizeof(double));
+	double* p = (double*)malloc(N_MAX*sizeof(double));
+	double* q = (double*)malloc(N_MAX*sizeof(double));
+	double* pq = (double*)malloc(N_MAX*sizeof(double));
 	
 	double old_best1 = get_ln_prob_sample_new(Sample1, s, H, _N);
-	vector<int> inv_count_store(N_stateful);
+	vector<int> inv_count_store(N_MAX);
 	for(int sid=0;sid<N_MAX;sid++){ // how many keys ;; the first big O(N) loop
 		
 		/*memset(p,0,N*sizeof(double));
@@ -82,15 +56,12 @@ void Bay_Rank_H::sample_H(vector<int> Sample1, vector<int> Pred_Table_2_H, vecto
 		int rank1 = H.at(sid); 
 
 		int inv_count = old_inv_count;
+		assert(inv_count>=0);
 		inv_count_store.at(rank1) = old_inv_count;
 		
 		
 		p[rank1] = old_best1;
-	
-		
-		assert(inv_count>=0);
-
-		q[rank1] = get_prior_prob_inv_count(N_stateful,inv_count); // O(1) 	// shud be N_stateful
+		q[rank1] = get_prior_prob_inv_count(N_MAX,inv_count); // O(1) 	// shud be N_MAX
 		pq[rank1] = p[rank1] + q[rank1];
 		
 		//assert(p[rank1] <= 1000);//assert(q[rank1] <= 1000);//assert(pq[rank1] <= 1000);
@@ -98,7 +69,7 @@ void Bay_Rank_H::sample_H(vector<int> Sample1, vector<int> Pred_Table_2_H, vecto
 		assert(std::isinf(q[rank1])==false);assert(std::isnan(q[rank1])==false);
 		assert(std::isinf(pq[rank1])==false);assert(std::isnan(pq[rank1])==false);
 		
-		int range_min = max(0,rank1 - MAX_APP);
+		int range_min = max(0,rank1 - MAX_APP_NUM);
 	
 			
 		for(int j=rank1-1; j>=range_min;j--){ //place to go
@@ -108,11 +79,10 @@ void Bay_Rank_H::sample_H(vector<int> Sample1, vector<int> Pred_Table_2_H, vecto
 			p[j] = p[j+1] - Rank_wise_Sample1.at(rank1)*log_prob_temp1.at(j+1) - Rank_wise_Sample1.at(j)*log_prob_temp1.at(j) 
 			+ Rank_wise_Sample1.at(j)*log_prob_temp1.at(j+1) + Rank_wise_Sample1.at(rank1)*log_prob_temp1.at(j);
 		
-			
 			int srid = j+1;
 			int drid = j; 
 			
-			assert(srid < N_stateful);assert(drid < N_stateful);
+			assert(srid < N_MAX);assert(drid < N_MAX);
 			
 			if(  corr_rank_mapper1.at(srid) > corr_rank_mapper1.at(drid)){
 				inv_count++;
@@ -126,13 +96,12 @@ void Bay_Rank_H::sample_H(vector<int> Sample1, vector<int> Pred_Table_2_H, vecto
 			corr_rank_mapper1.at(srid) = corr_rank_mapper1.at(drid);
 			corr_rank_mapper1.at(drid) = temp;
 
-			/*int tmp_inv_count = get_inv_count(corr_rank_mapper1, N_stateful); // NlogN
+			/*int tmp_inv_count = get_inv_count(corr_rank_mapper1, N_MAX); // NlogN
 			inv_count_store.at(j) = tmp_inv_count;
 			assert(tmp_inv_count == inv_count );
 			*/
-			
 			assert(inv_count>=0);
-			q[j] = get_prior_prob_inv_count(N_stateful,inv_count);
+			q[j] = get_prior_prob_inv_count(N_MAX,inv_count);
 			pq[j] = p[j] + q[j];
 			
 			//assert(p[j] <= 1000);//assert(q[j] <= 1000);//assert(pq[j] <= 1000);
@@ -143,26 +112,17 @@ void Bay_Rank_H::sample_H(vector<int> Sample1, vector<int> Pred_Table_2_H, vecto
 		
 		inv_count = old_inv_count;
 
-		int range_max;
-		range_max = min(_N-1, rank1 + MAX_APP );
-		
-		
-		
+		int range_max = min(_N-1, rank1 + MAX_APP_NUM );
 		for(int j=rank1+1; j<=range_max; j++){
 
-			if(_N_xcs_flag == 0)
-				p[j] = p[j-1] - Rank_wise_Sample1.at(rank1)* log_prob_temp1.at(j-1) - Rank_wise_Sample1.at(j)*log_prob_temp1.at(j)
+			p[j] = p[j-1] - Rank_wise_Sample1.at(rank1)* log_prob_temp1.at(j-1) - Rank_wise_Sample1.at(j)*log_prob_temp1.at(j)
 			+ Rank_wise_Sample1.at(j)*log_prob_temp1.at(j-1) + Rank_wise_Sample1.at(rank1)*log_prob_temp1.at(j);
-			else
-				p[j] = old_best1;
-
 			
 			int srid = j-1; 
 			int drid = j; 
 			
-			assert(srid < N_stateful);	assert(drid < N_stateful);
+			assert(srid < N_MAX);	assert(drid < N_MAX);
 			
-		
 			if ( (corr_rank_mapper2.at(srid) > corr_rank_mapper2.at(drid)))
 				inv_count--;
 			else 
@@ -174,12 +134,12 @@ void Bay_Rank_H::sample_H(vector<int> Sample1, vector<int> Pred_Table_2_H, vecto
 			corr_rank_mapper2.at(srid) = corr_rank_mapper2.at(drid);
 			corr_rank_mapper2.at(drid) = temp;
 								
-			/*int tmp_inv_count = get_inv_count(corr_rank_mapper2, N_stateful);
+			/*int tmp_inv_count = get_inv_count(corr_rank_mapper2, N_MAX);
 			inv_count_store.at(j) = tmp_inv_count;
 			assert(tmp_inv_count == inv_count);*/
 		
 			assert(inv_count>=0);
-			q[j] = get_prior_prob_inv_count(N_stateful,inv_count); // O(1)
+			q[j] = get_prior_prob_inv_count(N_MAX,inv_count); // O(1)
 			pq[j] = p[j] + q[j];
 			
 			
@@ -223,7 +183,7 @@ void Bay_Rank_H::sample_H(vector<int> Sample1, vector<int> Pred_Table_2_H, vecto
 				corr_rank_mapper2.at(i) = temp;
 				corr_rank_mapper3.at(i) = temp;
 			}
-			//assert(get_inv_count(corr_rank_mapper1, N_stateful ) == old_inv_count);	
+			//assert(get_inv_count(corr_rank_mapper1, N_MAX ) == old_inv_count);	
 		}else if(rank_did1 < rank_sid1){
 			for(int i = rank_sid1; i>=(rank_did1 + 1);i-- ){
 				int j = i - 1;
@@ -235,7 +195,7 @@ void Bay_Rank_H::sample_H(vector<int> Sample1, vector<int> Pred_Table_2_H, vecto
 				corr_rank_mapper2.at(i) = temp;
 				corr_rank_mapper3.at(i) = temp;
 			}
-			//assert(get_inv_count(corr_rank_mapper1, N_stateful ) == old_inv_count);
+			//assert(get_inv_count(corr_rank_mapper1, N_MAX ) == old_inv_count);
 		}	
 	}
 	
@@ -246,7 +206,7 @@ void Bay_Rank_H::sample_H(vector<int> Sample1, vector<int> Pred_Table_2_H, vecto
 }
 
 
-vector<int> Bay_Rank_H::Modify_H(vector<int> H_in,int sid, int did){
+vector<int> Bay_Rank_H::Modify_H(vector<int> H_in,int sid, int did){ //deprecated
 	vector<int> Mod_H = H_in;
 	
 	for(int i=0;i<Mod_H.size();i++){
@@ -379,12 +339,12 @@ void Bay_Rank_H::Modify_H_smart(vector<int>* H_in, vector<int>* rank_map1, int s
 }
 
 
-int Bay_Rank_H::get_inv_count(vector<int> rank2, int N_stateful){ // it only takes into account _N elements
+int Bay_Rank_H::get_inv_count(vector<int> rank2, int N_MAX){ // it only takes into account _N elements
 	
 	assert(rank2.size()==N_MAX);
 	
 	vector<int> arr_temp;
-	for(int i=0;i<N_stateful;i++){
+	for(int i=0;i<N_MAX;i++){
 		arr_temp.push_back(rank2.at(i));
 	}
 
@@ -416,15 +376,6 @@ double Bay_Rank_H::get_prior_prob_inv_count(int n, int inv_count){ // n = N , in
 	return  (prob_val_nume - prob_val_deno);
 }
 
-double Bay_Rank_H::get_prior_prob_deno(int n, int inv_count){ 
-	double mu = (n)*(n-1)/(double)4;
-	double sigma = sqrt((n)*(n-1)*(2*n+5)/(double)72);
-	
-	double prob_val_deno_part1 = lognormpdf(inv_count,mu,sigma);
-	double prob_val_deno_part2 = 0;//logfactorial(n);
-	double prob_val_deno = prob_val_deno_part1 + prob_val_deno_part2;
-	return prob_val_deno;
-}
 
 double Bay_Rank_H::lognormpdf( double x, double mu, double sigma ){
 	double pi = 22/7;
@@ -438,12 +389,7 @@ double Bay_Rank_H::find_beta_count_prior(int inv_count, int n_max){ // independe
 	
 	double MAX = (n_max*(n_max-1))/(double)2;
 	double map_to_beta = 1-(inv_count/(double) MAX);
-	
-	if(inv_count > MAX){
-		//cout << inv_count << " " << MAX << endl;
-		printf("Oh my god1!! \n");
-	}
-	assert(inv_count >= 0);
+	assert(inv_count >= 0);assert(inv_count<=MAX);
 	double log_prob_val = gsl_ran_beta_log_pdf (map_to_beta, corr_alpha, corr_beta);
 	return log_prob_val;
 }

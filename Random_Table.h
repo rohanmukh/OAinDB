@@ -6,7 +6,7 @@
 #include "Bay_Zipf_Exp.h"
 #include "Bay_RJMC_N.h"
 #include "Bay_Rank_H.h"
-#include "MergeSort.h"
+
 
 class Random_Table : public Generat_Table{
 	public:
